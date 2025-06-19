@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: black;
+            height: 100vh;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .builder-container {
+            display: flex;
+            height: 100vh;
+            background: white;
+            margin: 10px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f8f9ff;
+            border-right: 1px solid #e1e5f2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color:#001aff;
+            color: white;
+            text-align: center;
+        }
+
+        .sidebar-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .elements-panel {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .elements-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .elements-title::before {
+            margin-right: 8px;
+        }
+
+        .element-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+            position: relative;
+        }
+
+        .element-item:hover {
+            border-color: #001aff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .element-item:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+
+        .element-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .element-name {
+            font-weight: 500;
+            color: #2d3748;
+            flex: 1;
+        }
+
+        .insert-btn {
+            background: #001aff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            z-index: 10;
+        }
+
+        .insert-btn:hover {
+
+            background: #4b5dfe;
+        }
+
+        .insert-btn:active {
+            transform: scale(0.95);
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e1e5f2;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover {
+            background: #f7fafc;
+            border-color: #667eea;
+
+        }
+
+        .canvas-container {
+            flex: 1;
+            background: #f7fafc;
+            position: relative;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .canvas {
+            min-height: 100%;
+            background: white;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+            padding: 20px;
+        }
+
+        .canvas.drag-over {
+            border: 2px dashed #667eea;
+            background: #f0f4ff;
+        }
+
+        .canvas-element {
+            position: relative;
+            margin: 10px 0;
+            padding: 8px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .canvas-element:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .canvas-element.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .canvas-element .delete-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .canvas-element:hover .delete-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .properties-panel {
+            width: 320px;
+            background: #f8f9ff;
+            border-left: 1px solid #e1e5f2;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .properties-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .properties-title::before {
+            margin-right: 8px;
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+        }
+
+        .property-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .color-input {
+            width: 50px;
+            height: 35px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .canvas-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #2d3748;
+        }
+
+        .canvas-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .canvas-button:hover {
+            background: #5a67d8;
+        }
+
+        .canvas-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 18px;
+            margin-top: 50px;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .builder-container {
+                margin: 5px;
+            }
+            
+            .sidebar {
+                width: 250px;
+            }
+            
+            .properties-panel {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .builder-container {
+                flex-direction: column;
+                margin: 0;
+                border-radius: 0;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #e1e5f2;
+                flex-shrink: 0;
+            }
+            
+            .elements-panel {
+                height: auto;
+                flex: none;
+            }
+            
+            .main-area {
+                flex: 1;
+                min-height: 400px;
+            }
+            
+            .properties-panel {
+                width: 100%;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid #e1e5f2;
+                flex: none;
+            }
+            
+            .canvas {
+                min-height: 300px;
+                margin: 10px;
+            }
+            
+            .element-item {
+                padding: 20px 16px;
+                margin-bottom: 12px;
+                font-size: 16px;
+                min-height: 60px;
+            }
+            
+            .property-input {
+                padding: 12px;
+                font-size: 16px;
+                min-height: 44px;
+            }
+            
+            .canvas-element {
+                padding: 15px;
+                margin: 20px 0;
+                min-height: 50px;
+            }
+
+            .canvas-element .delete-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+        }
+
+        .drag-ghost {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .no-selection {
+            color: #a0aec0;
+            text-align: center;
+            font-style: italic;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="builder-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>HTMLCraft</h1>
+                <p>A Website Builder</p>
+            </div>
+            <div class="elements-panel">
+                <div class="elements-title">Elements</div>
+                <div class="element-item" draggable="true" data-type="text">
+                    <span class="element-icon">📝</span>
+                    <span class="element-name">Text</span>
+                    <button class="insert-btn" onclick="insertElement('text', event)">+</button>
+                </div>
+                <div class="element-item" draggable="true" data-type="button">
+                    <span class="element-icon">🔘</span>
+                    <span class="element-name">Button</span>
+                    <button class="insert-btn" onclick="insertElement('button', event)">+</button>
+                </div>
+                <div class="element-item" draggable="true" data-type="image">
+                    <span class="element-icon">🖼️</span>
+                    <span class="element-name">Image</span>
+                    <button class="insert-btn" onclick="insertElement('image', event)">+</button>
+                </div>
+                <div class="element-item" draggable="true" data-type="heading">
+                    <span class="element-icon">📰</span>
+                    <span class="element-name">Heading</span>
+                    <button class="insert-btn" onclick="insertElement('heading', event)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="toolbar">
+                <div style="color: #667eea; font-weight: 600; font-size: 16px;">
+                    Canvas Area
+                </div>
+            </div>
+            <div class="canvas-container">
+                <div class="canvas" id="canvas">
+                    <div class="empty-state">
+                        <span class="icon">🎨</span>
+                        <div>Drag elements from the sidebar or click the + buttons to start building</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="properties-panel">
+            <div class="properties-title">Properties</div>
+            <div id="properties-content">
+                <div class="no-selection">
+                    Select an element to edit its properties
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedElement = null;
+        let elementCounter = 0;
+        let draggedElement = null;
+        let isMobile = window.innerWidth <= 768;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            initializeDragAndDrop();
+            updateMobileState();
+        });
+
+        window.addEventListener('resize', function() {
+            updateMobileState();
+        });
+
+        function updateMobileState() {
+            isMobile = window.innerWidth <= 768;
+            console.log('Mobile state:', isMobile);
+        }
+
+        function initializeDragAndDrop() {
+            console.log('Initializing drag and drop...');
+            const elements = document.querySelectorAll('.element-item');
+            const canvas = document.getElementById('canvas');
+
+            if (!canvas) {
+                console.error('Canvas not found!');
+                return;
+            }
+
+            console.log('Found', elements.length, 'draggable elements');
+
+            if (!isMobile) {
+                elements.forEach((element, index) => {
+                    console.log(`Setting up element ${index}:`, element.dataset.type);
+                    
+                    element.addEventListener('dragstart', handleDragStart);
+                    element.addEventListener('dragend', handleDragEnd);
+                    element.setAttribute('draggable', 'true');
+                });
+
+                canvas.addEventListener('dragover', handleDragOver);
+                canvas.addEventListener('drop', handleDrop);
+                canvas.addEventListener('dragleave', handleDragLeave);
+            }
+            
+            console.log('Drag and drop initialized for desktop:', !isMobile);
+        }
+
+        function insertElement(type, event) {
+            console.log('Insert button clicked for:', type);
+            event.stopPropagation();
+            event.preventDefault();
+            
+            const canvas = document.getElementById('canvas');
+            const emptyState = canvas.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            createCanvasElement(type);
+        }
+
+        function handleDragStart(e) {
+            console.log('Drag started for:', this.dataset.type);
+            draggedElement = this;
+            this.classList.add('drag-ghost');
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', this.dataset.type);
+        }
+
+        function handleDragEnd(e) {
+            console.log('Drag ended');
+            this.classList.remove('drag-ghost');
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+            document.getElementById('canvas').classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                document.getElementById('canvas').classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            console.log('Drop event triggered');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const canvas = document.getElementById('canvas');
+            canvas.classList.remove('drag-over');
+            
+            const elementType = e.dataTransfer.getData('text/plain');
+            
+            if (elementType && draggedElement) {
+                console.log('Creating element:', elementType);
+                createCanvasElement(elementType);
+                
+                const emptyState = canvas.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+            } else {
+                console.warn('No element type found in drop data');
+            }
+        }
+
+        function createCanvasElement(type) {
+            elementCounter++;
+            const canvas = document.getElementById('canvas');
+            const wrapper = document.createElement('div');
+            wrapper.className = 'canvas-element';
+            wrapper.dataset.id = `element-${elementCounter}`;
+            wrapper.dataset.type = type;
+            
+            let content = '';
+            let defaultProps = {};
+            
+            switch(type) {
+                case 'text':
+                    content = '<div class="canvas-text">Click to edit this text</div>';
+                    defaultProps = {
+                        text: 'Click to edit this text',
+                        fontSize: '16',
+                        color: '#2d3748',
+                        fontWeight: 'normal'
+                    };
+                    break;
+                case 'heading':
+                    content = '<h2 class="canvas-text" style="font-size: 24px; font-weight: bold;">Heading Text</h2>';
+                    defaultProps = {
+                        text: 'Heading Text',
+                        fontSize: '24',
+                        color: '#2d3748',
+                        fontWeight: 'bold'
+                    };
+                    break;
+                case 'button':
+                    content = '<button class="canvas-button">Click Me</button>';
+                    defaultProps = {
+                        text: 'Click Me',
+                        backgroundColor: '#667eea',
+                        color: '#ffffff',
+                        borderRadius: '6'
+                    };
+                    break;
+                case 'image':
+                    content = '<img class="canvas-image" src="https://picsum.photos/300/200" alt="Placeholder" crossorigin="anonymous" loading="lazy">';
+                    defaultProps = {
+                        src: 'https://picsum.photos/300/200',
+                        alt: 'Placeholder',
+                        width: '300'
+                    };
+                    break;
+            }
+            
+            wrapper.innerHTML = content + '<button class="delete-btn" onclick="deleteElement(this)">×</button>';
+            wrapper.dataset.props = JSON.stringify(defaultProps);
+            
+            wrapper.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectElement(this);
+            });
+            
+            canvas.appendChild(wrapper);
+            selectElement(wrapper);
+            
+            console.log('Element created:', type, 'ID:', wrapper.dataset.id);
+        }
+
+        function selectElement(element) {
+            const previousSelected = document.querySelector('.canvas-element.selected');
+            if (previousSelected) {
+                previousSelected.classList.remove('selected');
+            }
+            
+            element.classList.add('selected');
+            selectedElement = element;
+            
+            updatePropertiesPanel(element);
+        }
+
+        function updatePropertiesPanel(element) {
+            const propertiesContent = document.getElementById('properties-content');
+            const elementType = element.dataset.type;
+            const props = JSON.parse(element.dataset.props || '{}');
+            
+            let html = `<div class="property-group">
+                            <label class="property-label">Element Type</label>
+                            <input type="text" class="property-input" value="${elementType}" readonly>
+                        </div>`;
+            
+            switch(elementType) {
+                case 'text':
+                case 'heading':
+                    html += `
+                        <div class="property-group">
+                            <label class="property-label">Text Content</label>
+                            <textarea class="property-input" onchange="updateElementProperty('text', this.value)" rows="3">${props.text || ''}</textarea>
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Font Size (px)</label>
+                            <input type="number" class="property-input" value="${props.fontSize || 16}" onchange="updateElementProperty('fontSize', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Text Color</label>
+                            <input type="color" class="color-input" value="${props.color || '#2d3748'}" onchange="updateElementProperty('color', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Font Weight</label>
+                            <select class="property-input" onchange="updateElementProperty('fontWeight', this.value)">
+                                <option value="normal" ${props.fontWeight === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="bold" ${props.fontWeight === 'bold' ? 'selected' : ''}>Bold</option>
+                                <option value="lighter" ${props.fontWeight === 'lighter' ? 'selected' : ''}>Light</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'button':
+                    html += `
+                        <div class="property-group">
+                            <label class="property-label">Button Text</label>
+                            <input type="text" class="property-input" value="${props.text || ''}" onchange="updateElementProperty('text', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Background Color</label>
+                            <input type="color" class="color-input" value="${props.backgroundColor || '#667eea'}" onchange="updateElementProperty('backgroundColor', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Text Color</label>
+                            <input type="color" class="color-input" value="${props.color || '#ffffff'}" onchange="updateElementProperty('color', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Border Radius (px)</label>
+                            <input type="number" class="property-input" value="${props.borderRadius || 6}" onchange="updateElementProperty('borderRadius', this.value)">
+                        </div>
+                    `;
+                    break;
+                case 'image':
+                    html += `
+                        <div class="property-group">
+                            <label class="property-label">Image URL</label>
+                            <input type="url" class="property-input" value="${props.src || ''}" onchange="updateElementProperty('src', this.value)" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Alt Text</label>
+                            <input type="text" class="property-input" value="${props.alt || ''}" onchange="updateElementProperty('alt', this.value)" placeholder="Description of image">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Width (px)</label>
+                            <input type="number" class="property-input" value="${props.width || 300}" onchange="updateElementProperty('width', this.value)" min="50" max="800">
+                        </div>
+                        <div class="property-group">
+                            <small style="color: #718096; font-size: 12px;">
+                                💡 Tip: Use images from unsplash.com, pixabay.com, or pexels.com for better compatibility
+                            </small>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            propertiesContent.innerHTML = html;
+        }
+
+        function updateElementProperty(property, value) {
+            if (!selectedElement) return;
+            
+            const props = JSON.parse(selectedElement.dataset.props || '{}');
+            props[property] = value;
+            selectedElement.dataset.props = JSON.stringify(props);
+            
+            const elementType = selectedElement.dataset.type;
+            const contentElement = selectedElement.querySelector('.canvas-text, .canvas-button, .canvas-image');
+            
+            switch(elementType) {
+                case 'text':
+                case 'heading':
+                    if (property === 'text') {
+                        contentElement.textContent = value;
+                    } else if (property === 'fontSize') {
+                        contentElement.style.fontSize = value + 'px';
+                    } else if (property === 'color') {
+                        contentElement.style.color = value;
+                    } else if (property === 'fontWeight') {
+                        contentElement.style.fontWeight = value;
+                    }
+                    break;
+                case 'button':
+                    if (property === 'text') {
+                        contentElement.textContent = value;
+                    } else if (property === 'backgroundColor') {
+                        contentElement.style.backgroundColor = value;
+                    } else if (property === 'color') {
+                        contentElement.style.color = value;
+                    } else if (property === 'borderRadius') {
+                        contentElement.style.borderRadius = value + 'px';
+                    }
+                    break;
+                case 'image':
+                    if (property === 'src') {
+                        contentElement.src = value;
+                        contentElement.crossOrigin = 'anonymous';
+                        contentElement.onerror = function() {
+                            this.src = 'https://picsum.photos/300/200';
+                            console.warn('Image failed to load, using fallback');
+                        };
+                    } else if (property === 'alt') {
+                        contentElement.alt = value;
+                    } else if (property === 'width') {
+                        contentElement.style.width = value + 'px';
+                    }
+                    break;
+            }
+        }
+
+        function deleteElement(btn) {
+            const element = btn.parentElement;
+            if (selectedElement === element) {
+                selectedElement = null;
+                document.getElementById('properties-content').innerHTML = '<div class="no-selection">Select an element to edit its properties</div>';
+            }
+            element.remove();
+            
+            const canvas = document.getElementById('canvas');
+            if (canvas.children.length === 0) {
+                canvas.innerHTML = '<div class="empty-state"><span class="icon">🎨</span><div>Drag elements from the sidebar or click the + buttons to start building</div></div>';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.canvas-element') && !e.target.closest('.properties-panel')) {
+                const previousSelected = document.querySelector('.canvas-element.selected');
+                if (previousSelected) {
+                    previousSelected.classList.remove('selected');
+                    selectedElement = null;
+                    document.getElementById('properties-content').innerHTML = '<div class="no-selection">Select an element to edit its properties</div>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
